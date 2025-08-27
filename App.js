@@ -1,7 +1,26 @@
 import { StatusBar } from 'expo-status-bar';
-import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, FlatList, Keyboard, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { use, useState } from 'react';
 
 export default function App() {
+  const [tasks,setTasks] = useState([]); //Estado para armazenar a lista de tarefas
+  const[newTask, setNewTask] = useState(""); //estado para o texto da nova tarefa 
+  
+  const addTask = () => {
+    if (newTask.trim().length > 0){
+      //Garante que a tarefa não seja vazia
+      setTasks((prevTasks) => [
+        ...prevTasks,
+        {id: Date.now().toString(), text: newTask.trim(), completed: false} //cria uma nova tarefa com ID único
+      ])
+      setNewTask(""); //limpar o campo de input
+      Keyboard.dismiss(); // fecha o teclado do usuario
+    } else{
+      Alert.alert("Atenção", "Por favor, digite uma tarefa.");
+    }
+  };
+
   return (
     //cabeçario
     <View style={styles.container}>
@@ -16,8 +35,11 @@ export default function App() {
         <TextInput
         style={styles.input}
         placeholder="Adicionar nova tarefa..."
+        value={newTask}
+        onChangeText={setNewTask}
+        onSubmitEditing={addTask} //adiciona a tarefa ao pressionar Enter/ok no teclado
         />
-        <TouchableOpacity style={styles.addButton}>
+        <TouchableOpacity style={styles.addButton} onPress={addTask}>
           <Text style={styles.buttonText}>Adicionar</Text>
         </TouchableOpacity>
       </View>
@@ -25,12 +47,22 @@ export default function App() {
     {/* Lista de Tarefas */}
     <FlatList
     style={styles.flatList}
+    data={tasks}
+    keyExtractor={(item) => item.id}
+    renderItem={({item}) => (
+      <View key={item.id } style={styles.taskItem}>
+        <Text>{item.text}</Text>
+        <TouchableOpacity>
+          <Text>🗑️</Text>
+        </TouchableOpacity>
+      </View>
+    )}
     ListEmptyComponent={()=> (
       <Text style={styles.emptyListText}>Nenhuma tarefa adicionada ainda.</Text>
    )}
     contentContainerStyle={styles.flatListContent}
     />
-      <StatusBar style="auto" />
+    <StatusBar style="auto"/>
     </View>
   );
 }
